@@ -1,0 +1,180 @@
+---
+title: "PEC2 Otoño 2022"
+author: "UOC"
+dato: ''
+output:
+  pdf_document: default
+  word_document: default
+fontsize: 12pt
+---
+# Introducción
+
+Las PECS se basarán en una base de datos obtenida a partir del repositorio de microdatos del "Banco Mundial" a [https://microdata.worldbank.org/index.php/catalog/424/get-microdata](https://microdata.worldbank.org/index.php/catalog/424/get-microdata)
+
+Contiene indicaciones, entre otros de 
+
+1. *City* = Nombre de la ciudad
+2. *Country* = País
+3. *Population2000* = Población de la ciudad en 2000.
+4. *PM10Concentration1999* = *PM10 concentrations (micro gramos por cubic meter) in residential areas of cities larger than 100,000*, en 1999
+5. *Region* = Clasificación en región geográfica
+6. *IncomeGroup* = Clasificación según nivel de ingresos del país.
+
+Para importar los datos podemos usar la siguiente instrucción:
+
+```{r}
+datosPM10<-read.table("AirPollution2000WB_UOC2.csv", header=TRUE, 
+          sep=";",na.strings="NA",
+          fileEncoding = "UTF-8", quote = "\"", 
+          colClasses=c(rep("character",4),rep("numeric",2),
+                       rep("character",2)))
+```
+
+Hay que entregar la práctica en forma de fichero pdf (exportando el resultado final en pdf por ejemplo) en esta misma tarea Moodle; no hace falta entregarla en el registro de EC. 
+
+Os puede ser útil la función `table` para tabular los datos.
+
+Mirad las actividades resueltas de probabilidad del reto 2.
+
+\newpage
+
+# NOMBRE: Eugenio Moya Pérez
+
+# PEC2
+
+Una vez importados los datos
+
+## Problema 1 (30 puntos)
+a) Escogemos una ciudad de Ucrania al azar. Calcular la probabilidad de que esta ciudad tenga una población superior a 250000 habitantes en el año 2000. (15 puntos)
+b) Escogemos una ciudad de España con una concentración de PM10 superior a 42 micro gramos por metro cúbico al azar. Calcular la probabilidad de que esta ciudad tenga una población entre 200000 y 300000 habitantes en el año 2000. (15 puntos)
+
+### Solución
+
+**1. Apartado a)**
+
+- Ucrania
+```{r}
+ukraine <- subset(datosPM10,datosPM10$Country == "Ukraine")
+print (c("Ciudades en Ucrania:", nrow(ukraine)))
+
+population <- subset(ukraine, ukraine$Population2000 > 250000)
+print (c("Ciudades con población > 250000 habitantes:", nrow(population)))
+
+```
+La probabilidad de que la ciudad de Ucrania elegida tenga más de 250.000 habitantes sería:
+
+P()= 26/51
+
+```{r}
+probabilidad <- nrow(population)/nrow(ukraine)
+print (c("La probabilidad de que una ciudad sea de Ucrania y tenga una población superior a 250.000 habitantes sería: ", round(probabilidad, 4)))
+```
+
+**1.Apartado b)**
+
+- España
+
+```{r}
+spain <- subset(datosPM10, datosPM10$Country == "Spain" &
+                  datosPM10$PM10Concentration1999 > 42)
+print (c("Ciudades en España PM10 > 42 micro gramos por metro cúbico:",
+         nrow(spain)))
+
+```
+Probabilidad de que la ciudad de España elegida tenga una concentracion de PM10 suyerior a 42 y una poblacion entre 200.000 y 300.000 habitantes:
+
+```{r}
+spainPopulation <- subset(spain, spain$Population2000 >= 200000 &
+                            spain$Population2000 <= 300000)
+print (c("Ciudades en España con características mencionadas:", 
+         nrow(spainPopulation)))
+```
+P()= 4/24
+
+```{r}
+probabilidadSpain <- nrow(spainPopulation)/nrow(spain)
+print (c("Probabilidad: ", round(probabilidadSpain, 4)))
+```
+
+\newpage
+
+## Problema 2 (70 puntos)
+
+Sospechamos que el país al que pertenecen las ciudades de nuestra tabla determina el nivel de ingresos de estas ciudades.
+
+
+1. Antes que nada, hacemos un primer intento de comprobar nuestra sospecha con los países con más ciudades. Comprobar que todas las ciudades de Brasil, China, India, Japón, Rusia y Estados Unidos tienen el mismo nivel de ingresos. (20 puntos)
+
+2. Realizar la comprobación para todos los países de la tabla. (20 puntos)
+
+3. ¿Podemos decir que el país al que pertenece una ciudad y el nivel de ingresos de la misma son independientes? Escoger un país y calcular las probabilidades correspondientes que apoyen vuestra respuesta. (30 puntos)
+
+Indicación: para hacer los apartados 1. y 2. tenéis que usar la función `table` de `R` para calcular el número de ciudades que tienen un nivel de ingresos determinado y que pertenecen a un determinado país.
+Para ver que todas las ciudades de un mismo país tienen el mismo nivel de ingresos, pensar cuántos ceros tendría que tener el resultado de aplicar la función anterior.
+
+### Solución
+
+**2. Apartado 1) Tabla de Nivel de ingresos ciudades**
+
+```{r}
+countries <-subset(datosPM10,
+                datosPM10$Country=="Brazil"|
+                  datosPM10$Country=="China"|
+                  datosPM10$Country =="India"|
+                  datosPM10$Country=="Japan"|
+                  datosPM10$Country =="Russian Federation"|
+                  datosPM10$Country=="United States of America")
+table(countries$Country, countries$IncomeGroup)
+
+
+```
+Según los datos obtenidos en la tabla podemos apreciar que las ciudades de un pais pertenecen todas al mismo nivel de ingresos ya que en el resto de niveles tienen cero ciudades y que todos los paises tienen ingresos superiores a low ya que no obtenemos resultados.
+
+**2. Apartado 2) Tabla de los ingresos de todos los paises**
+
+```{r}
+allCountries<-table(datosPM10$Country, datosPM10$IncomeGroup)
+colnames(allCountries)= c("High","Low", "L.Middle","U.Middle")
+
+print(allCountries)
+```
+En esta tabla del conjunto de paises podemos apreciar que todas las ciudades de un pais tienen todos el mismo nivel de ingresos.
+
+**2.Apartado 3) Comprobar independencia entre pais y nivel de ingresos.**
+
+Los sucesos son independientes si se cumple que.
+
+ **P(Brazil, Upper Middle Income) = P(Brazil) · P(Upper Middle Income)**
+
+1 - Elegimos un pais, en este caso **Brazil** 
+
+2 - Calculamos la probabilidad de que una ciudad se encuentre en Brasil:
+ 
+```{r}
+selectedCounty <- subset(datosPM10, datosPM10$Country == "Brazil")
+print (c("Ciudades:",nrow(selectedCounty)))
+print (c("Probabilidad: ", round((nrow(selectedCounty)/3218), 3)))
+
+```
+3 - Probabilidad que una ciudad pertenezca a "Upper middle income":
+
+```{r}
+income <- subset(datosPM10,datosPM10$IncomeGroup == "Upper middle income")
+print (c("Ciudades mismo nivel:",nrow(income)))
+print (c("Probabilidad ciudad pertenezca a upper middle income: ",
+         round((nrow (income)/3218), 3)))
+```
+4 - Calculamos de que la ciudad se encuentre en Brazil y que pertenezca al nivel ""Upper middle income":
+
+```{r}
+incomeAndBrazil <- subset(selectedCounty, selectedCounty$IncomeGroup == "Upper middle income")
+print (c("Probabilidad ciudad de Brasil y pertenezca a upper middle income: ", 
+         round((nrow (incomeAndBrazil)/3218), 3)))
+```
+5 - Conclusión:
+
+P(Brazil, Upper Middle Income) = P(Brazil) · P(Upper Middle Income)
+
+**180/3218 != 180/3218 · 1268/3218**
+
+**No son independientes**
